@@ -8,13 +8,11 @@
 
 char cutat[] = "+-*/&|^~<>=!?:;,.(){}[]";
 
-ks3_token_t **add_to_tokens(int token_count, ks3_token_t **tokens, char *token, int index) {
+ks3_token_t **add_to_tokens(int token_count, ks3_token_t **tokens, char *token, int line, int column) {
     // printf("adding token: %s\n", token);
     if (token_count % TOKEN_INCREMENT == 0) {
         tokens = tp_realloc(tokens, sizeof(ks3_token_t *) * (token_count + TOKEN_INCREMENT));
     }
-    int line, column;
-    adds_index_to_lac(token, index, &line, &column);
 
     tokens[token_count] = tp_malloc(sizeof(ks3_token_t));
     tokens[token_count]->token = token;
@@ -47,7 +45,9 @@ void add_if_nessary(int *token_count, ks3_token_t **tokens, int index, int token
         char *token = tp_malloc(index - token_start + 1);
         memcpy(token, buf + token_start, index - token_start);
         token[index - token_start] = '\0';
-        tokens = add_to_tokens(*token_count, tokens, token, token_start);
+        int line, column;
+        adds_index_to_lac(buf, token_start, &line, &column);
+        tokens = add_to_tokens(*token_count, tokens, token, line, column);
         (*token_count)++;
     }
 }
@@ -60,11 +60,27 @@ ks3_tokens_t *tokenize(char *buf) {
     int token_start = 0;
 
     int line, column;
+    char *token;
 
     while (buf[index] != '\0') {
         // comment
         if (buf[index] == '/' && buf[index + 1] == '/') {
             while (buf[index] != '\n' && buf[index] != '\0') {
+                index++;
+            }
+            while (buf[index] == ' ' || buf[index] == '\n' || buf[index] == '\t') {
+                index++;
+            }
+            token_start = index;
+        }
+
+        // multiline comment
+        else if (buf[index] == '/' && buf[index + 1] == '*') {
+            while (buf[index] != '\0') {
+                if (buf[index] == '*' && buf[index + 1] == '/') {
+                    index += 2;
+                    break;
+                }
                 index++;
             }
             while (buf[index] == ' ' || buf[index] == '\n' || buf[index] == '\t') {
@@ -88,10 +104,11 @@ ks3_tokens_t *tokenize(char *buf) {
                 index++;
             }
 
-            char *token = tp_malloc(index - token_start + 1);
+            token = tp_malloc(index - token_start + 1);
             memcpy(token, buf + token_start, index - token_start + 1);
             token[index - token_start + 1] = '\0';
-            tokens = add_to_tokens(token_count, tokens, token, token_start);
+            adds_index_to_lac(buf, token_start, &line, &column);
+            tokens = add_to_tokens(token_count, tokens, token, line, column);
             token_count++;
             index++;
             token_start = index;
@@ -112,7 +129,8 @@ ks3_tokens_t *tokenize(char *buf) {
             char *token = tp_malloc(2);
             token[0] = buf[index];
             token[1] = '\0';
-            tokens = add_to_tokens(token_count, tokens, token, index);
+            adds_index_to_lac(buf, index, &line, &column);
+            tokens = add_to_tokens(token_count, tokens, token, line, column);
             token_count++;
             index++;
             token_start = index;
@@ -123,7 +141,7 @@ ks3_tokens_t *tokenize(char *buf) {
 
     add_if_nessary(&token_count, tokens, index, token_start, buf);
 
-    tokens = add_to_tokens(token_count, tokens, NULL, 0);
+    tokens = add_to_tokens(token_count, tokens, NULL, 0, 0);
 
     ks3_tokens_t *ks3_tokens = tp_malloc(sizeof(ks3_tokens_t));
     ks3_tokens->tokens = tokens;

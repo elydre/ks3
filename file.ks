@@ -1,3 +1,5 @@
 "coucou" > print
-// comment
-4+5>>print 
+
+IF 1 == 1 {
+    "coucou" > print
+}
