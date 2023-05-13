@@ -1,1 +1,1 @@
-gcc src/*.c -o ks3.out
+gcc src/*.c -o ks3
