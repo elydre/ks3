@@ -6,6 +6,8 @@
 #include "toport.h"
 #include "ks3.h"
 
+char cutat[] = "+-*/&|^~<>=!?:;,.(){}[]";
+
 ks3_token_t **add_to_tokens(int token_count, ks3_token_t **tokens, char *token, int index) {
     // printf("adding token: %s\n", token);
     if (token_count % TOKEN_INCREMENT == 0) {
@@ -65,7 +67,7 @@ ks3_tokens_t *tokenize(char *buf) {
             while (buf[index] != '\n' && buf[index] != '\0') {
                 index++;
             }
-            while (buf[index] == ' ' || buf[index] == '\n') {
+            while (buf[index] == ' ' || buf[index] == '\n' || buf[index] == '\t') {
                 index++;
             }
             token_start = index;
@@ -98,9 +100,21 @@ ks3_tokens_t *tokenize(char *buf) {
         // space or newline
         else if (buf[index] == ' ' || buf[index] == '\n') {
             add_if_nessary(&token_count, tokens, index, token_start, buf);
-            while (buf[index] == ' ' || buf[index] == '\n') {
+            while (buf[index] == ' ' || buf[index] == '\n' || buf[index] == '\t') {
                 index++;
             }
+            token_start = index;
+        }
+
+        // cutat
+        else if (strchr(cutat, buf[index]) != NULL) {
+            add_if_nessary(&token_count, tokens, index, token_start, buf);
+            char *token = tp_malloc(2);
+            token[0] = buf[index];
+            token[1] = '\0';
+            tokens = add_to_tokens(token_count, tokens, token, index);
+            token_count++;
+            index++;
             token_start = index;
         }
 
