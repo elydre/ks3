@@ -15,7 +15,9 @@ int main(int argc, char **argv) {
         adds_fatal("could not read file %s", filename);
     }
 
-    printf("%s\n", buf);
+    ks3_tokens_t *ks3_tokens = tokenize(buf);
+    print_tokens(ks3_tokens);
 
+    free_tokens(ks3_tokens);
     free(buf);
 }

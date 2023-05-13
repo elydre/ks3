@@ -11,3 +11,16 @@ void adds_fatal(char *format, ...) {
     va_end(args);
     exit(1);
 }
+
+void adds_index_to_lac(char *buf, int index, int *line, int *column) {
+    *line = 1;
+    *column = 1;
+    for (int i = 0; i < index; i++) {
+        if (buf[i] == '\n') {
+            (*line)++;
+            *column = 1;
+        } else {
+            (*column)++;
+        }
+    }
+}

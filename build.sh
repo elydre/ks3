@@ -1,1 +1,1 @@
-gcc src/*.c -o ks3
+gcc src/*.c -o ks3 -Wall -Wextra

@@ -1,0 +1,119 @@
+#define TOKEN_INCREMENT 10
+
+#include <string.h>
+#include <stdio.h>
+
+#include "toport.h"
+#include "ks3.h"
+
+ks3_token_t **add_to_tokens(int token_count, ks3_token_t **tokens, char *token, int index) {
+    // printf("adding token: %s\n", token);
+    if (token_count % TOKEN_INCREMENT == 0) {
+        tokens = tp_realloc(tokens, sizeof(ks3_token_t *) * (token_count + TOKEN_INCREMENT));
+    }
+    int line, column;
+    adds_index_to_lac(token, index, &line, &column);
+
+    tokens[token_count] = tp_malloc(sizeof(ks3_token_t));
+    tokens[token_count]->token = token;
+    tokens[token_count]->line = line;
+    tokens[token_count]->column = column;
+    return tokens;
+}
+
+void print_tokens(ks3_tokens_t *ks3_tokens) {
+    for (int i = 0; i < ks3_tokens->token_count; i++) {
+        printf("[%s, l%d, c%d]\n",
+                ks3_tokens->tokens[i]->token,
+                ks3_tokens->tokens[i]->line,
+                ks3_tokens->tokens[i]->column
+        );
+    }
+}
+
+void free_tokens(ks3_tokens_t *ks3_tokens) {
+    for (int i = 0; i < ks3_tokens->token_count; i++) {
+        tp_free(ks3_tokens->tokens[i]->token);
+        tp_free(ks3_tokens->tokens[i]);
+    }
+    tp_free(ks3_tokens->tokens);
+    tp_free(ks3_tokens);
+}
+
+void add_if_nessary(int *token_count, ks3_token_t **tokens, int index, int token_start, char *buf) {
+    if (index - token_start > 0) {
+        char *token = tp_malloc(index - token_start + 1);
+        memcpy(token, buf + token_start, index - token_start);
+        token[index - token_start] = '\0';
+        tokens = add_to_tokens(*token_count, tokens, token, token_start);
+        (*token_count)++;
+    }
+}
+
+ks3_tokens_t *tokenize(char *buf) {
+    int token_count = 0;
+    ks3_token_t **tokens = tp_malloc(sizeof(ks3_token_t *) * TOKEN_INCREMENT);
+
+    int index = 0;
+    int token_start = 0;
+
+    int line, column;
+
+    while (buf[index] != '\0') {
+        // comment
+        if (buf[index] == '/' && buf[index + 1] == '/') {
+            while (buf[index] != '\n' && buf[index] != '\0') {
+                index++;
+            }
+            while (buf[index] == ' ' || buf[index] == '\n') {
+                index++;
+            }
+            token_start = index;
+        }
+
+        // string
+        else if (buf[index] == '"') {
+            add_if_nessary(&token_count, tokens, index, token_start, buf);
+            
+            token_start = index;
+            index++;
+
+            while (buf[index] != '"') {
+                if (buf[index] == '\0') {
+                    adds_index_to_lac(buf, token_start, &line, &column);
+                    adds_fatal("[lexer] unterminated string at line %d, column %d", line, column);
+                }
+                index++;
+            }
+
+            char *token = tp_malloc(index - token_start + 1);
+            memcpy(token, buf + token_start, index - token_start + 1);
+            token[index - token_start + 1] = '\0';
+            tokens = add_to_tokens(token_count, tokens, token, token_start);
+            token_count++;
+            index++;
+            token_start = index;
+        }
+
+        // space or newline
+        else if (buf[index] == ' ' || buf[index] == '\n') {
+            add_if_nessary(&token_count, tokens, index, token_start, buf);
+            while (buf[index] == ' ' || buf[index] == '\n') {
+                index++;
+            }
+            token_start = index;
+        }
+
+        else index++;
+    }
+
+    add_if_nessary(&token_count, tokens, index, token_start, buf);
+
+    tokens = add_to_tokens(token_count, tokens, NULL, 0);
+
+    ks3_tokens_t *ks3_tokens = tp_malloc(sizeof(ks3_tokens_t));
+    ks3_tokens->tokens = tokens;
+    ks3_tokens->token_count = token_count;
+
+    return ks3_tokens;
+}
