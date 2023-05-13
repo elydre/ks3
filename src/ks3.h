@@ -1,7 +1,7 @@
 #ifndef KS3_H
 #define KS3_H
 
-#define KS3_VERSION "0.0.3"
+#define KS3_VERSION "0.0.4"
 
 typedef enum {
     TYPE_INTEGER,

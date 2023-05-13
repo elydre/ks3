@@ -6,7 +6,7 @@
 #include "toport.h"
 #include "ks3.h"
 
-char cutat[] = "+-*/&|^~<>=!?:;,.(){}[]";
+char cutat[] = "\"'+-*/&|^~<>=!?:;,.(){}[]";
 
 ks3_token_t **add_to_tokens(int token_count, ks3_token_t **tokens, char *token, int line, int column) {
     // printf("adding token: %s\n", token);
@@ -60,7 +60,6 @@ ks3_tokens_t *tokenize(char *buf) {
     int token_start = 0;
 
     int line, column;
-    char *token;
 
     while (buf[index] != '\0') {
         // comment
@@ -86,31 +85,6 @@ ks3_tokens_t *tokenize(char *buf) {
             while (buf[index] == ' ' || buf[index] == '\n' || buf[index] == '\t') {
                 index++;
             }
-            token_start = index;
-        }
-
-        // string
-        else if (buf[index] == '"') {
-            add_if_nessary(&token_count, tokens, index, token_start, buf);
-            
-            token_start = index;
-            index++;
-
-            while (buf[index] != '"') {
-                if (buf[index] == '\0') {
-                    adds_index_to_lac(buf, token_start, &line, &column);
-                    adds_fatal("[lexer] unterminated string at line %d, column %d", line, column);
-                }
-                index++;
-            }
-
-            token = tp_malloc(index - token_start + 1);
-            memcpy(token, buf + token_start, index - token_start + 1);
-            token[index - token_start + 1] = '\0';
-            adds_index_to_lac(buf, token_start, &line, &column);
-            tokens = add_to_tokens(token_count, tokens, token, line, column);
-            token_count++;
-            index++;
             token_start = index;
         }
 
