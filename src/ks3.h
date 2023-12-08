@@ -1,7 +1,7 @@
 #ifndef KS3_H
 #define KS3_H
 
-#define KS3_VERSION "0.0.4"
+#define KS3_VERSION "0.0.5"
 
 typedef enum {
     TYPE_INTEGER,
@@ -85,9 +85,28 @@ typedef struct {
     int obj_count;
 } ks3_ast_t;
 
+// args_t
+typedef struct {
+    char *filename;
+
+    int version;
+    int usage;
+    int help;
+
+    int show_tokens;
+    int show_ast;
+
+    int shell;
+} ks3_agrs_t;
+
 // adds.c
-void adds_fatal(char *format, ...);
 void adds_index_to_lac(char *buf, int index, int *line, int *column);
+
+// args.c
+void ks3_show_help(void);
+void ks3_show_usage(void);
+void ks3_show_version(void);
+ks3_agrs_t *ks3_parse_args(int argc, char **argv);
 
 // lexer.c
 ks3_tokens_t *tokenize(char *buf);
@@ -95,6 +114,8 @@ void print_tokens(ks3_tokens_t *ks3_tokens);
 void free_tokens(ks3_tokens_t *ks3_tokens);
 
 // parser.c
-ks3_ast_t *parse(ks3_tokens_t *ks3_tokens);
+ks3_ast_t **parse(ks3_tokens_t *ks3_tokens);
+void print_asts(ks3_ast_t **ks3_asts);
+void free_asts(ks3_ast_t **ks3_asts);
 
 #endif

@@ -5,3 +5,6 @@ build/
 *.elf
 *.bin
 /ks3
+
+# test file
+file.ks
