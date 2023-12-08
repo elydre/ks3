@@ -34,7 +34,7 @@ typedef enum {
     OP_NOT, // !
 
     OP_EQ,  // ==
-    OP_NE,  // !=
+    OP_NE,  // =!=
     OP_GT,  // =+=
     OP_LT,  // =-=
 
@@ -81,8 +81,8 @@ typedef struct {
 
 // ast_t
 typedef struct {
-    ks3_obj_t **objs;
-    int obj_count;
+    ks3_obj_t *objs;
+    ks3_ast_t **asts;
 } ks3_ast_t;
 
 // args_t
